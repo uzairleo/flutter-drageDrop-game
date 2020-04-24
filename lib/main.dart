@@ -18,94 +18,209 @@ class MyApp extends StatelessWidget {
         // or simply save your changes to "hot reload" in a Flutter IDE).
         // Notice that the counter didn't reset back to zero; the application
         // is not restarted.
-        primarySwatch: Colors.blue,
+
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: Homepage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
+class Homepage extends StatefulWidget {
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _HomepageState createState() => _HomepageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _HomepageState extends State<Homepage> {
+  List<ItemModel> itemsdata = [
+      ItemModel(
+        name: 'cat',
+        value: 'cat',
+        imgurl: "assets/images/cat.png",
+      ),
+      ItemModel(
+        name: 'dino',
+        value: 'dino',
+        imgurl: "assets/images/dino.png",
+      ),
+      ItemModel(
+        name: 'elephant',
+        value: 'elephant',
+        imgurl: "assets/images/elephant.png",
+      ),
+      ItemModel(
+        name: 'giraffe',
+        value: 'giraffe',
+        imgurl: "assets/images/giraf.png",
+      )
+    ];
+  List<ItemModel> items;
+  List<ItemModel> items2;
+  int score;
+  bool gameOver;
+  @override
+  void initState() {
+    super.initState();
+    initGame();
+  }
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  initGame() {
+    gameOver = false;
+    score = 0;
+    items = itemsdata.take(5).toList();
+    items2 = List<ItemModel>.from(items);
+    items.shuffle();
+    items2.shuffle();
+    itemsdata.shuffle();
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    if (items.length == 0) gameOver = true;
+    final data= MediaQuery.of(context);
     return Scaffold(
       appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        backgroundColor: Colors.lightBlueAccent,
+        elevation: 0,
+        centerTitle: true,
+        title: Text(
+          "Dragebale Game",
+        ),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
+      body: SingleChildScrollView(
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
+            Container(
+              alignment: Alignment.center,
+              height: 50,
+                width: data.size.width/1,
+                color: Colors.lightBlueAccent,
+                child: Text("Score: $score",style: TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black,
+                ),
+                ),
+
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
+
+            if(!gameOver)
+            Row(
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    children: 
+                    items
+                        .map((item) => Padding(
+                              padding: const EdgeInsets.all(30.0),
+                              child: Draggable<ItemModel>(
+                                  data: item,
+                                  feedback: Image.asset(
+                                    item.imgurl,
+                                    height: 100,
+                                    width: 100,
+                                  ),
+                                  childWhenDragging: Image.asset(
+                                    item.imgurl,
+                                    height: 100,
+                                    width: 100,
+                                    colorBlendMode: BlendMode.softLight,
+                                  ),
+                                  child: Image.asset(
+                                    item.imgurl,
+                                    height: 100,
+                                    width: 100,
+                                  )),
+                            ))
+                        .toList(),
+                  ),
+                ),
+                Spacer(),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    children: items2
+                        .map((item) => Padding(
+                              padding: const EdgeInsets.all(30.0),
+                              child: DragTarget<ItemModel>(
+                                onAccept: (recivedItem) {
+                                  if (item.value == recivedItem.value) {
+                                    setState(() {
+                                      items.remove(recivedItem);
+                                      items2.remove(item);
+                                      score += 1;
+                                    });
+                                  } else {
+                                    setState(() {
+                                      score += 0;
+                                      item.accepting = false;
+                                    });
+                                  }
+                                },
+                                onLeave: (recivedItem) {
+                                  setState(() {
+                                    item.accepting = false;
+                                  });
+                                },
+                                onWillAccept: (recivedItem) {
+                                  setState(() {
+                                    item.accepting = true;
+                                  });
+
+                                  return true;
+                                },
+                                builder:
+                                    (context, acceptedItems, rejectedItems) =>
+                                        Container(
+                                  alignment: Alignment.center,
+                                  height: 100,
+                                  width: 100,
+                                  color: item.accepting
+                                      ? Colors.lightBlueAccent.shade400
+                                      : Colors.lightBlueAccent,
+                                  child: Text(
+                                    item.name,
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ))
+                        .toList(),
+                  ),
+                ),
+              ],
             ),
+            if(gameOver)
+              Center(
+                child: Image.network("https://image.freepik.com/free-vector/game-pixel-art-retro-game-style_163786-44.jpg")
+              ),
+            if (gameOver)
+              Container(
+                width: 300,
+                child: RaisedButton(
+                  color: Colors.redAccent,
+                  child: Text("new game"),
+                  onPressed: () {
+                    initGame();
+                    setState(() {});
+                  },
+                ),
+              ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
+}
+
+class ItemModel {
+  final String name;
+  final String value;
+  final String imgurl;
+  bool accepting;
+  ItemModel({this.name, this.value, this.imgurl, this.accepting = false});
 }
